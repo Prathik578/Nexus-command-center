@@ -14,23 +14,41 @@ async function getUserId() {
 }
 
 export async function createTask(input: { title: string; projectId?: string; priority?: string }) {
-  const userId = await getUserId()
-  const title = input.title.trim()
+  const userId = await getUserId(); const title = input.title.trim()
   if (!title || title.length > 200) throw new Error('Task title is invalid')
-  const [task] = await db.insert(tasks).values({
-    id: crypto.randomUUID(),
-    userId,
-    title,
-    projectId: input.projectId || null,
-    priority: input.priority || 'medium',
-  }).returning()
-  revalidatePath('/')
-  return task
+  const [task] = await db.insert(tasks).values({ id: crypto.randomUUID(), userId, title, projectId: input.projectId || null, priority: input.priority || 'medium' }).returning()
+  revalidatePath('/'); return task
 }
 
 export async function completeTask(id: string) {
   const userId = await getUserId()
-  await db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
+  await db.update(tasks).set({ status: 'completed', updatedAt: new Date() }).where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
+  revalidatePath('/')
+}
+
+export async function reopenTask(id: string) {
+  const userId = await getUserId()
+  await db.update(tasks).set({ status: 'todo', updatedAt: new Date() }).where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
+  revalidatePath('/')
+}
+
+export async function createNote(input: { title: string; content: string }) {
+  const userId = await getUserId(); const title = input.title.trim(); const content = input.content.trim()
+  if (!title || !content || title.length > 200) throw new Error('Note is invalid')
+  const [note] = await db.insert(notes).values({ id: crypto.randomUUID(), userId, title, content }).returning()
+  revalidatePath('/'); return note
+}
+
+export async function updateNote(id: string, input: { title: string; content: string }) {
+  const userId = await getUserId(); const title = input.title.trim(); const content = input.content.trim()
+  if (!title || !content || title.length > 200) throw new Error('Note is invalid')
+  const [note] = await db.update(notes).set({ title, content, updatedAt: new Date() }).where(and(eq(notes.id, id), eq(notes.userId, userId))).returning()
+  revalidatePath('/'); return note
+}
+
+export async function deleteNote(id: string) {
+  const userId = await getUserId()
+  await db.delete(notes).where(and(eq(notes.id, id), eq(notes.userId, userId)))
   revalidatePath('/')
 }
 
