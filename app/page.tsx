@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { completeTask as persistCompleteTask, createTask as persistCreateTask } from './actions/workspace'
 import {
   Archive,
   ArrowUpRight,
@@ -25,7 +26,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-type Task = { title: string; project: string; status: string; priority: string; due?: string }
+type Task = { id?: string; title: string; project: string; status: string; priority: string; due?: string }
 
 const initialTasks: Task[] = [
   { title: 'Finalize authentication flow', project: 'Nexus Command Center', status: 'In Progress', priority: 'Critical', due: 'Today' },
@@ -56,11 +57,31 @@ export default function Page() {
   const [activeNav, setActiveNav] = useState('Command center')
   const [query, setQuery] = useState('')
   const [showComposer, setShowComposer] = useState(false)
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const filteredTasks = useMemo(() => tasks.filter((task) => `${task.title} ${task.project}`.toLowerCase().includes(query.toLowerCase())), [tasks, query])
 
-  function completeTask(index: number) {
-    setTasks((current) => current.filter((_, taskIndex) => taskIndex !== index))
+  async function completeTask(index: number) {
+    const task = filteredTasks[index]
+    setTasks((current) => current.filter((item) => item !== task))
+    if (task?.id) await persistCompleteTask(task.id).catch(() => undefined)
+  }
+
+  async function handleCreateTask() {
+    const title = newTaskTitle.trim()
+    if (!title || saving) return
+    setSaving(true)
+    try {
+      const saved = await persistCreateTask({ title })
+      setTasks((current) => [{ id: saved.id, title, project: 'Nexus Command Center', status: 'Todo', priority: 'Medium', due: 'Today' }, ...current])
+    } catch {
+      setTasks((current) => [{ title, project: 'Nexus Command Center', status: 'Todo', priority: 'Medium', due: 'Today' }, ...current])
+    } finally {
+      setNewTaskTitle('')
+      setSaving(false)
+      setShowComposer(false)
+    }
   }
 
   return (
@@ -106,7 +127,7 @@ export default function Page() {
         </section>
       </div>
 
-      {showComposer && <div className="fixed inset-0 z-20 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowComposer(false)}><div className="w-full max-w-md rounded-xl border border-white/10 bg-[#111d30] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Create a new task</h2><p className="mt-1 text-xs text-slate-500">Capture the next action while it&apos;s fresh.</p></div><button onClick={() => setShowComposer(false)} className="text-slate-500 hover:text-white">×</button></div><label className="mt-5 block text-xs font-medium text-slate-400">Task title<input autoFocus className="mt-2 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none ring-indigo-400 focus:ring-2" placeholder="What needs to happen?" /></label><div className="mt-5 flex justify-end gap-2"><button onClick={() => setShowComposer(false)} className="rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05]">Cancel</button><button onClick={() => setShowComposer(false)} className="rounded-lg bg-indigo-500 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-400">Create task</button></div></div></div>}
+      {showComposer && <div className="fixed inset-0 z-20 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowComposer(false)}><div className="w-full max-w-md rounded-xl border border-white/10 bg-[#111d30] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Create a new task</h2><p className="mt-1 text-xs text-slate-500">Capture the next action while it&apos;s fresh.</p></div><button onClick={() => setShowComposer(false)} className="text-slate-500 hover:text-white" aria-label="Close composer">×</button></div><label className="mt-5 block text-xs font-medium text-slate-400">Task title<input autoFocus value={newTaskTitle} onChange={(event) => setNewTaskTitle(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) void handleCreateTask() }} className="mt-2 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none ring-indigo-400 focus:ring-2" placeholder="What needs to happen?" /></label><div className="mt-5 flex justify-end gap-2"><button onClick={() => setShowComposer(false)} className="rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05]">Cancel</button><button onClick={() => void handleCreateTask()} disabled={!newTaskTitle.trim() || saving} className="rounded-lg bg-indigo-500 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50">{saving ? 'Saving…' : 'Create task'}</button></div></div></div>}
     </main>
   )
 }
