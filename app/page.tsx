@@ -297,6 +297,7 @@ export default function Page() {
               archivedTasks={archivedTasks}
               archivedNotes={archivedNotes}
               notes={notes}
+              setQuery={setQuery}
               onComplete={finish}
               onArchiveTask={archiveTask}
               onRestoreArchivedTask={restoreArchivedTask}
@@ -463,6 +464,28 @@ function TaskRow({
   );
 }
 
+type WorkspaceProps = {
+  activeNav: string;
+  tasks: Task[];
+  completed: Task[];
+  archivedTasks: Task[];
+  archivedNotes: Note[];
+  notes: Note[];
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  onComplete: (task: Task) => void;
+  onArchiveTask: (task: Task) => void;
+  onRestoreArchivedTask: (task: Task) => void;
+  onArchiveNote: (note: Note) => void;
+  onRestoreArchivedNote: (note: Note) => void;
+  onRestore: (task: Task) => void;
+  onAddTask: () => void;
+  taskTitle: string;
+  setTaskTitle: React.Dispatch<React.SetStateAction<string>>;
+  onNewNote: () => void;
+  onEditNote: (note: Note) => void;
+  onDeleteNote: (note: Note) => void;
+};
+
 function Workspace({
   activeNav,
   tasks,
@@ -470,6 +493,7 @@ function Workspace({
   archivedTasks,
   archivedNotes,
   notes,
+  setQuery,
   onComplete,
   onArchiveTask,
   onRestoreArchivedTask,
@@ -482,7 +506,7 @@ function Workspace({
   onNewNote,
   onEditNote,
   onDeleteNote,
-}: any) {
+}: WorkspaceProps) {
   const [mode, setMode] = useState<"open" | "completed">("open");
   const [archiveMode, setArchiveMode] = useState<"tasks" | "notes">("tasks");
   const [openProject, setOpenProject] = useState<string | null>(null);
@@ -710,14 +734,14 @@ function Workspace({
           <h3 className="font-semibold">Knowledge vault tags</h3>
           <div className="mt-5 flex flex-wrap gap-2">
             {Array.from(
-              new Set(
+              new Set<string>(
                 notes.flatMap(
                   (note: Note) =>
                     `${note.title} ${note.content}`.match(/#[a-z0-9_-]+/gi) ??
                     [],
                 ),
               ),
-            ).map((tag) => (
+            ).map((tag: string) => (
               <button
                 key={tag}
                 onClick={() => setQuery(tag)}
