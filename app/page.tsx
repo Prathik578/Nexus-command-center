@@ -712,7 +712,7 @@ function Workspace({
           <h3 className="font-semibold">Knowledge vault tags</h3>
           <div className="mt-5 flex flex-wrap gap-2">
             {Array.from(
-              new Set(
+              new Set<string>(
                 notes.flatMap(
                   (note: Note) =>
                     `${note.title} ${note.content}`.match(/#[a-z0-9_-]+/gi) ??
