@@ -297,6 +297,7 @@ export default function Page() {
               archivedTasks={archivedTasks}
               archivedNotes={archivedNotes}
               notes={notes}
+              setQuery={setQuery}
               onComplete={finish}
               onArchiveTask={archiveTask}
               onRestoreArchivedTask={restoreArchivedTask}
@@ -470,6 +471,7 @@ function Workspace({
   archivedTasks,
   archivedNotes,
   notes,
+  setQuery,
   onComplete,
   onArchiveTask,
   onRestoreArchivedTask,
@@ -719,11 +721,11 @@ function Workspace({
               ),
             ).map((tag) => (
               <button
-                key={tag}
-                onClick={() => setQuery(tag)}
+                key={String(tag)}
+                onClick={() => setQuery(String(tag))}
                 className="rounded-full border border-indigo-400/20 bg-indigo-400/10 px-3 py-1.5 text-xs text-indigo-200"
               >
-                {tag}
+                {String(tag)}
               </button>
             ))}
             {!notes.some((note: Note) =>
