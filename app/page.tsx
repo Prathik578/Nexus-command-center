@@ -464,6 +464,28 @@ function TaskRow({
   );
 }
 
+type WorkspaceProps = {
+  activeNav: string;
+  tasks: Task[];
+  completed: Task[];
+  archivedTasks: Task[];
+  archivedNotes: Note[];
+  notes: Note[];
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  onComplete: (task: Task) => void;
+  onArchiveTask: (task: Task) => void;
+  onRestoreArchivedTask: (task: Task) => void;
+  onArchiveNote: (note: Note) => void;
+  onRestoreArchivedNote: (note: Note) => void;
+  onRestore: (task: Task) => void;
+  onAddTask: () => void;
+  taskTitle: string;
+  setTaskTitle: React.Dispatch<React.SetStateAction<string>>;
+  onNewNote: () => void;
+  onEditNote: (note: Note) => void;
+  onDeleteNote: (note: Note) => void;
+};
+
 function Workspace({
   activeNav,
   tasks,
@@ -484,7 +506,7 @@ function Workspace({
   onNewNote,
   onEditNote,
   onDeleteNote,
-}: any) {
+}: WorkspaceProps) {
   const [mode, setMode] = useState<"open" | "completed">("open");
   const [archiveMode, setArchiveMode] = useState<"tasks" | "notes">("tasks");
   const [openProject, setOpenProject] = useState<string | null>(null);
@@ -719,13 +741,13 @@ function Workspace({
                     [],
                 ),
               ),
-            ).map((tag) => (
+            ).map((tag: string) => (
               <button
-                key={String(tag)}
-                onClick={() => setQuery(String(tag))}
+                key={tag}
+                onClick={() => setQuery(tag)}
                 className="rounded-full border border-indigo-400/20 bg-indigo-400/10 px-3 py-1.5 text-xs text-indigo-200"
               >
-                {String(tag)}
+                {tag}
               </button>
             ))}
             {!notes.some((note: Note) =>
